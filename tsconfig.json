@@ -1,0 +1,64 @@
+{
+    "compilerOptions": {
+      "target": "ES2020",
+      "module": "commonjs",
+      "lib": ["ES2020"],
+      "outDir": "./dist",
+      "rootDir": "./src",
+      
+      // Strict Type-Checking Options
+      "strict": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "strictFunctionTypes": true,
+      "strictBindCallApply": true,
+      "strictPropertyInitialization": true,
+      "noImplicitThis": true,
+      "useUnknownInCatchVariables": true,
+      "alwaysStrict": true,
+      
+      // Additional Checks
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "noUncheckedIndexedAccess": true,
+      "noImplicitOverride": true,
+      
+      // Module Resolution
+      "moduleResolution": "node",
+      "baseUrl": "./src",
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      
+      // Advanced Options
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      
+      // Source Map Options
+      "sourceMap": true,
+      
+      // Experimental Options
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      
+      // Type Checking
+      "allowUnreachableCode": false,
+      
+      // Paths configuration (optional)
+      "paths": {
+        "@core/*": ["core/*"],
+        "@services/*": ["services/*"],
+        "@infrastructure/*": ["infrastructure/*"],
+        "@config/*": ["config/*"]
+      }
+    },
+    "include": [
+      "src/**/*"
+    ],
+    "exclude": [
+      "node_modules",
+      "dist",
+      "**/*.test.ts"
+    ]
+  }
