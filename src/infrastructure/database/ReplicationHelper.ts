@@ -1,45 +1,42 @@
-import { Knex } from 'knex';
+import { Pool } from 'pg';
 
 export class ReplicationHelper {
-    constructor(private readonly knex: Knex) {}
-  
-    async checkReplicationStatus() {
-      const result = await this.knex.raw(`
-        SELECT 
-          slot_name,
-          plugin,
-          slot_type,
-          active,
-          restart_lsn,
-          confirmed_flush_lsn
-        FROM pg_replication_slots
-        WHERE slot_name = 'query_subscription_slot';
-      `);
-  
-      return result.rows[0];
-    }
-  
-    async getReplicationLag() {
-      const result = await this.knex.raw(`
-        SELECT CASE 
-          WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn()
-            THEN 0
-          ELSE EXTRACT (EPOCH FROM now() - pg_last_xact_replay_timestamp())
-        END AS replication_lag;
-      `);
-  
-      return result.rows[0].replication_lag;
-    }
-  
-    async ensurePublication() {
-      const result = await this.knex.raw(`
-        SELECT pubname 
-        FROM pg_publication 
-        WHERE pubname = 'query_updates';
-      `);
-  
-      if (result.rows.length === 0) {
-        throw new Error('Publication query_updates not found');
-      }
+  constructor(private readonly pool: Pool) {}
+
+  async ensurePublication(): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('CREATE PUBLICATION IF NOT EXISTS app_publication FOR ALL TABLES');
+    } finally {
+      client.release();
     }
   }
+
+  async checkReplicationStatus(): Promise<{ active: boolean }> {
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT active 
+        FROM pg_replication_slots 
+        WHERE slot_name = 'app_replication_slot'
+      `);
+      return { active: result.rows[0]?.active || false };
+    } finally {
+      client.release();
+    }
+  }
+
+  async getReplicationLag(): Promise<number> {
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))::integer as lag
+        FROM pg_stat_replication
+        WHERE application_name = 'app_replication'
+      `);
+      return result.rows[0]?.lag || 0;
+    } finally {
+      client.release();
+    }
+  }
+}

@@ -1,21 +1,29 @@
-import { Knex } from 'knex';
+import { MigrationBuilder, ColumnDefinitions } from 'node-pg-migrate';
 
-export async function up(knex: Knex): Promise<void> {
-  await knex.schema.createTable('operations_log', (table) => {
-    table.uuid('id').primary();
-    table.string('table_name').notNullable();
-    table.uuid('record_id').notNullable();
-    table.jsonb('operation_data').notNullable();
-    table.uuid('user_id').notNullable();
-    table.timestamp('server_timestamp').defaultTo(knex.fn.now());
-    table.boolean('is_applied').defaultTo(true);
-    table.string('status').defaultTo('pending');
-    table.text('error_message');
-    
-    table.index(['table_name', 'record_id', 'is_applied']);
+export const shorthands: ColumnDefinitions | undefined = undefined;
+
+export async function up(pgm: MigrationBuilder): Promise<void> {
+  pgm.createTable('operations_log', {
+    id: { type: 'uuid', primaryKey: true },
+    table_name: { type: 'varchar(255)', notNull: true },
+    record_id: { type: 'uuid', notNull: true },
+    operation_data: { type: 'jsonb', notNull: true },
+    user_id: { type: 'uuid', notNull: true },
+    server_timestamp: {
+      type: 'timestamp',
+      notNull: true,
+      default: pgm.func('current_timestamp')
+    },
+    is_applied: { type: 'boolean', notNull: true, default: true },
+    status: { type: 'varchar(50)', notNull: true, default: 'pending' },
+    error_message: { type: 'text' }
   });
-}
 
-export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTable('operations_log');
-}
+  pgm.createIndex('operations_log', 
+    ['table_name', 'record_id', 'is_applied']
+  );
+};
+
+export async function down(pgm: MigrationBuilder): Promise<void> {
+  pgm.dropTable('operations_log');
+};

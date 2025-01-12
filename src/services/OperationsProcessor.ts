@@ -3,6 +3,7 @@ import { QueueService } from './QueueService';
 import { MetricsService } from './MetricsService';
 import { Operation, QueueMessage } from '../core/types';
 import { Logger } from 'pino';
+import { PoolClient } from 'pg';
 
 export class OperationsProcessor {
   constructor(
@@ -45,16 +46,16 @@ export class OperationsProcessor {
     }
   }
 
-  private async getMergedOperations(operation: Operation, trx: any) {
-    const result = await trx.raw(`
+  private async getMergedOperations(operation: Operation, client: PoolClient) {
+    const result = await client.query(`
       SELECT jsonb_object_agg(
         key,
         value ORDER BY server_timestamp
       ) AS merged_operation_data
       FROM operations_log,
            jsonb_each(operation_data) AS ops(key, value)
-      WHERE table_name = ? 
-        AND record_id = ?
+      WHERE table_name = $1 
+        AND record_id = $2
         AND is_applied = true
       GROUP BY table_name, record_id
     `, [operation.tableName, operation.recordId]);
@@ -66,11 +67,12 @@ export class OperationsProcessor {
     tableName: string,
     recordId: string,
     data: any,
-    trx: any
+    client: PoolClient
   ): Promise<void> {
-    await trx(tableName)
-      .where({ id: recordId })
-      .update({ content: data });
+    await client.query(
+      `UPDATE ${tableName} SET content = $1 WHERE id = $2`,
+      [data, recordId]
+    );
   }
 
   private async handleProcessingError(operation: Operation, error: Error): Promise<void> {

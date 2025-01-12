@@ -26,7 +26,7 @@ async function main() {
   const metricsService = new MetricsService();
 
   // ...
-  const replicationHelper = new ReplicationHelper(db.getKnex());
+  const replicationHelper = new ReplicationHelper(db.getPool());
   const monitoringService = new MonitoringService(
     replicationHelper,
     metricsService,
