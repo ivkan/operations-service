@@ -34,12 +34,12 @@ export class WebSocketService {
       try {
         const operation: Operation = JSON.parse(data.toString());
         
-        // await this.queueService.publish({
-        //   operation,
-        //   userId: operation.userId,
-        //   timestamp: Date.now()
-        // });
-        console.log('operation', !!this.queueService, operation);
+        await this.queueService.publish({
+          operation,
+          userId: operation.userId,
+          timestamp: Date.now()
+        });
+        // console.log('operation', !!this.queueService, operation);
 
         ws.send(JSON.stringify({
           type: 'ACK',

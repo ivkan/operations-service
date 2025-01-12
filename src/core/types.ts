@@ -5,7 +5,7 @@ export interface Operation {
     operationData: Record<string, any>;
     userId: string;
     timestamp: Date;
-  }
+}
   
   export interface QueueMessage {
     operation: Operation;

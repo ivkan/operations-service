@@ -27,4 +27,16 @@ export class QueueService {
       throw error;
     }
   }
+
+  public onMessage(callback: () => Promise<void>): void {
+    this.queue.onMessage(callback);
+  }
+
+  public setProcessing(status: boolean): void {
+    this.queue.setProcessing(status);
+  }
+
+  public hasMessages(): boolean {
+    return this.queue.size() > 0;
+  }
 } 

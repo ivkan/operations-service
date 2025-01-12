@@ -43,7 +43,7 @@ class WebSocketClient {
                     tableName: 'documents',
                     recordId: this.generateId(),
                     operationData: data,
-                    userId: 'test-user',
+                    userId: this.generateId(),
                     timestamp: new Date()
                 };
 
