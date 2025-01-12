@@ -22,19 +22,29 @@ export class WebSocketService {
   }
 
   private handleConnection(ws: WebSocket): void {
+    this.logger.info('New client connected');
+    
+    // Send initial connection acknowledgment
+    ws.send(JSON.stringify({ 
+      type: 'CONNECTION_ACK',
+      message: 'Connected to operations service'
+    }));
+
     ws.on('message', async (data: WebSocket.Data) => {
       try {
         const operation: Operation = JSON.parse(data.toString());
         
-        await this.queueService.publish({
-          operation,
-          userId: operation.userId,
-          timestamp: Date.now()
-        });
+        // await this.queueService.publish({
+        //   operation,
+        //   userId: operation.userId,
+        //   timestamp: Date.now()
+        // });
+        console.log('operation', !!this.queueService, operation);
 
         ws.send(JSON.stringify({
           type: 'ACK',
-          operationId: operation.id
+          operationId: operation.id,
+          status: 'success'
         }));
 
         this.metricsService.increment('websocket.operation.received');
@@ -42,13 +52,22 @@ export class WebSocketService {
         this.handleError(ws, error as Error);
       }
     });
+
+    ws.on('close', () => {
+      this.logger.info('Client disconnected');
+    });
+
+    ws.on('error', (error) => {
+      this.logger.error('WebSocket error:', error);
+    });
   }
 
   private handleError(ws: WebSocket, error: Error): void {
     this.logger.error(error);
     ws.send(JSON.stringify({
       type: 'ERROR',
-      message: 'Failed to process operation'
+      message: 'Failed to process operation',
+      details: error.message
     }));
   }
 }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations Client</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Operations Client</h1>
+        
+        <div class="status-panel">
+            <div id="connection-status">Status: Disconnected</div>
+            <div id="error-message" class="error hidden"></div>
+        </div>
+
+        <div class="input-panel">
+            <textarea 
+                id="operation-data" 
+                placeholder="Enter operation data (JSON)"
+            ></textarea>
+            <button id="send-button" disabled>Send Operation</button>
+        </div>
+
+        <div class="messages-panel">
+            <h3>Messages:</h3>
+            <div id="messages"></div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 
