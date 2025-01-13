@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "dotenv": "^16.3.1",
+        "msgpackr": "^1.11.2",
         "node-pg-migrate": "^6.2.2",
         "pg": "^8.11.3",
         "pino": "^8.17.2",

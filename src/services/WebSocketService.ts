@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import { Packr, Unpackr } from 'msgpackr';
 import { QueueService } from './QueueService';
 import { MetricsService } from './MetricsService';
 import { Operation } from '../core/types';
@@ -6,6 +7,8 @@ import { Logger } from 'pino';
 
 export class WebSocketService {
   private wss: WebSocket.Server;
+  private packr: Packr;
+  private unpackr: Unpackr;
 
   constructor(
     private readonly port: number,
@@ -14,6 +17,8 @@ export class WebSocketService {
     private readonly logger: Logger
   ) {
     this.wss = new WebSocket.Server({ port });
+    this.packr = new Packr();
+    this.unpackr = new Unpackr();
   }
 
   public start(): void {
@@ -25,23 +30,22 @@ export class WebSocketService {
     this.logger.info('New client connected');
     
     // Send initial connection acknowledgment
-    ws.send(JSON.stringify({ 
+    ws.send(this.packr.pack({ 
       type: 'CONNECTION_ACK',
       message: 'Connected to operations service'
     }));
 
     ws.on('message', async (data: WebSocket.Data) => {
       try {
-        const operation: Operation = JSON.parse(data.toString());
+        const operation: Operation = this.unpackr.unpack(data as Buffer);
         
         await this.queueService.publish({
           operation,
           userId: operation.userId,
           timestamp: Date.now()
         });
-        // console.log('operation', !!this.queueService, operation);
 
-        ws.send(JSON.stringify({
+        ws.send(this.packr.pack({
           type: 'ACK',
           operationId: operation.id,
           status: 'success'
@@ -64,7 +68,7 @@ export class WebSocketService {
 
   private handleError(ws: WebSocket, error: Error): void {
     this.logger.error(error);
-    ws.send(JSON.stringify({
+    ws.send(this.packr.pack({
       type: 'ERROR',
       message: 'Failed to process operation',
       details: error.message

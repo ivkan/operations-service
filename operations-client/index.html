@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operations Client</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/msgpackr/dist/index.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -16,6 +17,18 @@
         </div>
 
         <div class="input-panel">
+            <div class="id-control">
+                <label>
+                    <input type="checkbox" id="custom-record-toggle">
+                    Use custom Record ID
+                </label>
+                <input 
+                    type="text" 
+                    id="record-id" 
+                    placeholder="Enter record ID (UUID format)"
+                    disabled
+                >
+            </div>
             <textarea 
                 id="operation-data" 
                 placeholder="Enter operation data (JSON)"

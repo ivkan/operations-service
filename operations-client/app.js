@@ -1,11 +1,15 @@
 class WebSocketClient {
     constructor() {
+        this.packr = new msgpackr.Packr();
+        this.unpackr = new msgpackr.Unpackr();
         this.connect();
         this.setupEventListeners();
     }
 
     connect() {
         this.ws = new WebSocket('ws://localhost:3000');
+        
+        this.ws.binaryType = 'arraybuffer'; // Important for msgpack
         
         this.ws.onopen = () => {
             this.updateStatus(true);
@@ -23,7 +27,7 @@ class WebSocketClient {
 
         this.ws.onmessage = (event) => {
             try {
-                const data = JSON.parse(event.data);
+                const data = this.unpackr.unpack(new Uint8Array(event.data));
                 this.addMessage(data);
             } catch (err) {
                 this.showError('Failed to parse message');
@@ -34,6 +38,16 @@ class WebSocketClient {
     setupEventListeners() {
         const sendButton = document.getElementById('send-button');
         const operationData = document.getElementById('operation-data');
+        const customRecordToggle = document.getElementById('custom-record-toggle');
+        const recordId = document.getElementById('record-id');
+
+        // Handle custom record ID toggle
+        customRecordToggle.addEventListener('change', (e) => {
+            recordId.disabled = !e.target.checked;
+            if (!e.target.checked) {
+                recordId.value = '';
+            }
+        });
 
         sendButton.addEventListener('click', () => {
             try {
@@ -41,16 +55,24 @@ class WebSocketClient {
                 const operation = {
                     id: this.generateId(),
                     tableName: 'documents',
-                    recordId: this.generateId(),
+                    recordId: customRecordToggle.checked ? recordId.value : this.generateId(),
                     operationData: data,
                     userId: this.generateId(),
                     timestamp: new Date()
                 };
 
-                this.ws.send(JSON.stringify(operation));
+                // Validate custom record ID if provided
+                if (customRecordToggle.checked && !this.isValidUUID(operation.recordId)) {
+                    throw new Error('Invalid UUID format for record ID');
+                }
+
+                this.ws.send(this.packr.pack(operation));
                 operationData.value = '';
+                if (customRecordToggle.checked) {
+                    recordId.value = '';
+                }
             } catch (err) {
-                this.showError('Invalid JSON data');
+                this.showError(err.message || 'Invalid JSON data');
             }
         });
     }
@@ -86,6 +108,12 @@ class WebSocketClient {
             const v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
+    }
+
+    // Add UUID validation method
+    isValidUUID(uuid) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
     }
 }
 

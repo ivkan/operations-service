@@ -67,4 +67,26 @@ button:disabled {
     padding: 8px;
     background-color: white;
     border-radius: 4px;
+}
+
+.id-control {
+    margin-bottom: 15px;
+}
+
+.id-control label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.id-control input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.id-control input[type="text"]:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
 } 
