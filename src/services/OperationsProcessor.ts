@@ -15,6 +15,11 @@ export class OperationsProcessor {
     private readonly logger: Logger
   ) {}
 
+  public stop(): void {
+    this.isProcessing = false;
+    this.logger.info('Operation processor stopped');
+  }
+
   public start(): void {
     if (this.isProcessing) {
       return;
@@ -24,23 +29,18 @@ export class OperationsProcessor {
     this.logger.info('Operation processor started');
     
     // Set up message handler
-    this.queueService.onMessage(async () => {
-      await this.processNextMessage();
+    this.queueService.onMessage(async (message) => {
+      await this.processNextMessage(message);
     });
   }
 
-  public stop(): void {
-    this.isProcessing = false;
-    this.logger.info('Operation processor stopped');
-  }
-
-  private async processNextMessage(): Promise<void> {
+  private async processNextMessage(message?: QueueMessage): Promise<void> {
     this.queueService.setProcessing(true);
     
     try {
-      const message = await this.queueService.receive();
-      if (message) {
-        await this.processMessage(message);
+      const queueMessage = message || this.queueService.receive();
+      if (queueMessage) {
+        await this.processMessage(queueMessage);
         
         // Check for more messages
         if (this.queueService.hasMessages()) {
@@ -67,10 +67,16 @@ export class OperationsProcessor {
           trx
         );
         
+        // Extract is_delete_operation flag from mergedData
+        const isDeleted = mergedData?.is_delete_operation || false;
+        // Remove is_delete_operation from content
+        const { is_delete_operation, ...contentData } = mergedData || {};
+
         await this.updateTargetTable(
           message.operation.tableName,
           message.operation.recordId,
-          mergedData,
+          contentData,
+          isDeleted,
           trx
         );
       });
@@ -104,16 +110,18 @@ export class OperationsProcessor {
     tableName: string,
     recordId: string,
     data: any,
+    isDeleted: boolean,
     client: PoolClient
   ): Promise<void> {
     await client.query(`
-      INSERT INTO ${tableName} (id, content, version)
-      VALUES ($1, $2, 1)
+      INSERT INTO ${tableName} (id, content, version, is_deleted)
+      VALUES ($1, $2, 1, $3)
       ON CONFLICT (id) DO UPDATE 
       SET content = $2,
           version = ${tableName}.version + 1,
+          is_deleted = $3,
           updated_at = NOW()
-    `, [recordId, data]);
+    `, [recordId, data, isDeleted]);
   }
 
   private async handleProcessingError(operation: Operation, error: Error): Promise<void> {

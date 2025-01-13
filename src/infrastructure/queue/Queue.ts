@@ -1,39 +1,46 @@
-import { AsyncQueue } from './async-queue';
+import { EventEmitter } from 'events';
 import { QueueMessage } from '../../core/types';
 import { QueueError } from '../../core/errors';
 
-export class Queue {
-  private queue: AsyncQueue;
+export class Queue extends EventEmitter {
+  private messages: QueueMessage[] = [];
+  private isProcessing: boolean = false;
 
   constructor() {
-    this.queue = new AsyncQueue();
+    super();
   }
 
-  public async publish(message: QueueMessage): Promise<void> {
+  public publish(message: QueueMessage): void {
     try {
-      await this.queue.publish(message);
+      this.messages.push(message);
+      if (!this.isProcessing) {
+        this.emit('message', message);
+      }
     } catch (error) {
       throw new QueueError('Failed to publish message', error as Error);
     }
   }
 
-  public async receive(): Promise<QueueMessage | null> {
+  public receive(): QueueMessage | null {
     try {
-      return await this.queue.receive();
+      return this.messages.shift() || null;
     } catch (error) {
       throw new QueueError('Failed to receive message', error as Error);
     }
   }
 
-  public onMessage(callback: () => Promise<void>): void {
-    this.queue.on('message', callback);
+  public onMessage(callback: (message: QueueMessage) => Promise<void>): void {
+    this.on('message', callback);
   }
 
   public setProcessing(status: boolean): void {
-    this.queue.setProcessing(status);
+    this.isProcessing = status;
+    if (!status && this.messages.length > 0) {
+      this.emit('message', this.messages[0]);
+    }
   }
 
   public size(): number {
-    return this.queue.size();
+    return this.messages.length;
   }
 } 

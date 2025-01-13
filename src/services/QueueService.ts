@@ -9,9 +9,9 @@ export class QueueService {
     this.queue = new Queue();
   }
 
-  public async publish(message: QueueMessage): Promise<void> {
+  public publish(message: QueueMessage): void {
     try {
-      await this.queue.publish(message);
+      this.queue.publish(message);
       this.logger.info({ messageId: message.operation.id }, 'Message published');
     } catch (error) {
       this.logger.error(error, 'Failed to publish message');
@@ -19,16 +19,16 @@ export class QueueService {
     }
   }
 
-  public async receive(): Promise<QueueMessage | null> {
+  public receive(): QueueMessage | null {
     try {
-      return await this.queue.receive();
+      return this.queue.receive();
     } catch (error) {
       this.logger.error(error, 'Failed to receive message');
       throw error;
     }
   }
 
-  public onMessage(callback: () => Promise<void>): void {
+  public onMessage(callback: (message: QueueMessage) => Promise<void>): void {
     this.queue.onMessage(callback);
   }
 

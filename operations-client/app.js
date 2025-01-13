@@ -40,6 +40,10 @@ class WebSocketClient {
         const operationData = document.getElementById('operation-data');
         const customRecordToggle = document.getElementById('custom-record-toggle');
         const recordId = document.getElementById('record-id');
+        const tableSelect = document.getElementById('table-name');
+        const rolesInput = document.getElementById('roles-input');
+        const rolesField = document.getElementById('roles');
+        const isDeletedToggle = document.getElementById('is-deleted-toggle');
 
         // Handle custom record ID toggle
         customRecordToggle.addEventListener('change', (e) => {
@@ -49,14 +53,40 @@ class WebSocketClient {
             }
         });
 
+        // Show/hide roles input based on table selection
+        tableSelect.addEventListener('change', () => {
+            rolesInput.classList.toggle('hidden', tableSelect.value !== 'users');
+            if (tableSelect.value !== 'users') {
+                rolesField.value = '';
+            }
+        });
+
+        // Show/hide delete toggle based on table selection
+        tableSelect.addEventListener('change', () => {
+            // Only show for documents and users tables
+            const showDelete = ['documents', 'users'].includes(tableSelect.value);
+            isDeletedToggle.parentElement.parentElement.classList.toggle('hidden', !showDelete);
+            if (!showDelete) {
+                isDeletedToggle.checked = false;
+            }
+        });
+
         sendButton.addEventListener('click', () => {
             try {
                 const data = JSON.parse(operationData.value);
                 const operation = {
                     id: this.generateId(),
-                    tableName: 'documents',
+                    tableName: tableSelect.value,
                     recordId: customRecordToggle.checked ? recordId.value : this.generateId(),
-                    operationData: data,
+                    operationData: {
+                        ...data,
+                        // Add roles array only for users table
+                        ...(tableSelect.value === 'users' && rolesField.value ? {
+                            roles: rolesField.value.split(',').map(role => role.trim()).filter(Boolean)
+                        } : {}),
+                        // Add is_deleted if checkbox is checked
+                        ...(isDeletedToggle.checked ? { is_delete_operation: true } : {})
+                    },
                     userId: this.generateId(),
                     timestamp: new Date()
                 };

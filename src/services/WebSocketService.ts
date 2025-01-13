@@ -35,11 +35,11 @@ export class WebSocketService {
       message: 'Connected to operations service'
     }));
 
-    ws.on('message', async (data: WebSocket.Data) => {
+    ws.on('message', (data: WebSocket.Data) => {
       try {
         const operation: Operation = this.unpackr.unpack(data as Buffer);
         
-        await this.queueService.publish({
+        this.queueService.publish({
           operation,
           userId: operation.userId,
           timestamp: Date.now()

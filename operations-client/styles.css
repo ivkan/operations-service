@@ -89,4 +89,53 @@ button:disabled {
 .id-control input[type="text"]:disabled {
     background-color: #f5f5f5;
     cursor: not-allowed;
+}
+
+.table-select {
+    margin-bottom: 15px;
+}
+
+.table-select label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.table-select select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.roles-input {
+    margin-bottom: 15px;
+}
+
+.roles-input label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.roles-input input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.delete-control {
+    margin-bottom: 15px;
+}
+
+.delete-control label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.delete-control input[type="checkbox"] {
+    margin: 0;
 } 

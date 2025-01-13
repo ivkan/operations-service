@@ -17,6 +17,28 @@
         </div>
 
         <div class="input-panel">
+            <div class="table-select">
+                <label for="table-name">Select Table:</label>
+                <select id="table-name" required>
+                    <option value="documents">Documents</option>
+                    <option value="roles">Roles</option>
+                    <option value="users">Users</option>
+                </select>
+            </div>
+            <div id="roles-input" class="roles-input hidden">
+                <label for="roles">Roles (comma-separated):</label>
+                <input 
+                    type="text" 
+                    id="roles" 
+                    placeholder="Enter roles (e.g., admin, user, editor)"
+                >
+            </div>
+            <div class="delete-control">
+                <label>
+                    <input type="checkbox" id="is-deleted-toggle">
+                    Mark as deleted
+                </label>
+            </div>
             <div class="id-control">
                 <label>
                     <input type="checkbox" id="custom-record-toggle">
